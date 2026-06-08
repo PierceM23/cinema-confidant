@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cinema Confidant</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Mono:wght@400;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --black: #0a0a0a; --deep: #111111; --surface: #161616;
+    --border: #2a2a2a; --gold: #c9a96e; --gold-dim: #7a6040;
+    --cream: #e8e0d0; --muted: #5a5550;
+  }
+  body { background: var(--black); color: var(--cream); font-family: 'Cormorant Garamond', serif; min-height: 100vh; }
+  .container { max-width: 780px; margin: 0 auto; padding: 0 24px; }
+  header { border-bottom: 1px solid var(--border); padding: 40px 0 28px; }
+  .logo { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+  h1 { font-size: clamp(38px, 6vw, 56px); font-weight: 300; font-style: italic; color: var(--cream); }
+  h1 span { color: var(--gold); font-weight: 400; }
+  .tagline { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.15em; margin-top: 12px; text-transform: uppercase; }
+  .input-section { padding: 36px 0 28px; border-bottom: 1px solid var(--border); }
+  .input-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.3em; color: var(--muted); text-transform: uppercase; margin-bottom: 14px; display: block; }
+  textarea { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--cream); font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; font-style: italic; padding: 18px 20px; resize: none; outline: none; min-height: 80px; line-height: 1.5; transition: border-color 0.3s; }
+  textarea::placeholder { color: var(--muted); opacity: 0.6; }
+  textarea:focus { border-color: var(--gold-dim); }
+  .submit-row { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+  .char-hint { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); }
+  button.submit { background: transparent; border: 1px solid var(--gold-dim); color: var(--gold); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; padding: 11px 28px; cursor: pointer; transition: all 0.25s; }
+  button.submit:hover { background: var(--gold); color: var(--black); }
+  button.submit:disabled { opacity: 0.4; cursor: not-allowed; }
+  .loading { display: none; padding: 48px 0; text-align: center; }
+  .loading.active { display: block; }
+  .film-strip { display: flex; justify-content: center; gap: 4px; margin-bottom: 20px; }
+  .frame { width: 6px; height: 22px; background: var(--border); animation: pulse 1.2s ease-in-out infinite; }
+  .frame:nth-child(2) { animation-delay: 0.15s; }
+  .frame:nth-child(3) { animation-delay: 0.3s; }
+  .frame:nth-child(4) { animation-delay: 0.45s; }
+  .frame:nth-child(5) { animation-delay: 0.6s; }
+  @keyframes pulse { 0%, 100% { background: var(--border); height: 22px; } 50% { background: var(--gold-dim); height: 32px; } }
+  .loading-text { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase; }
+  .results { display: none; padding: 40px 0 0; }
+  .results.active { display: block; }
+  .results-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 32px; }
+  .vibe-echo { font-size: 18px; font-style: italic; color: var(--muted); font-weight: 300; }
+  .vibe-echo strong { color: var(--cream); font-weight: 400; }
+  .count-badge { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--gold-dim); letter-spacing: 0.2em; text-transform: uppercase; }
+  .film-list { display: flex; flex-direction: column; }
+  .film-card { padding: 24px 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 40px 1fr; gap: 0 20px; opacity: 0; transform: translateY(12px); animation: fadeUp 0.4s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .film-number { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--gold-dim); padding-top: 6px; text-align: right; }
+  .film-title-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+  .film-title { font-size: 22px; font-weight: 400; font-style: italic; color: var(--cream); }
+  .film-meta { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 0.1em; }
+  .film-director { font-size: 12px; color: var(--gold-dim); margin-bottom: 10px; font-weight: 300; }
+  .film-desc { font-size: 15.5px; line-height: 1.65; color: #9a9085; font-weight: 300; }
+  .vibe-match { color: #b8ad9e; border-left: 2px solid var(--gold-dim); padding-left: 10px; margin-top: 6px; display: block; font-style: italic; }
+  .closing-q { margin: 40px 0 60px; padding: 28px 0; border-top: 1px solid var(--border); }
+  .q-label { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--gold-dim); letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 10px; }
+  .q-text { font-size: 20px; font-style: italic; font-weight: 300; color: var(--cream); line-height: 1.5; }
+  .error-msg { display: none; padding: 24px 0; font-family: 'Space Mono', monospace; font-size: 10px; color: #8b1a1a; }
+  .error-msg.active { display: block; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo">Cinema Confidant</div>
+    <h1>What <span>feeling</span><br>are you chasing?</h1>
+    <p class="tagline">Mood · Atmosphere · Resonance → Film</p>
+  </header>
+  <div class="input-section">
+    <label class="input-label" for="vibe-input">Give me anything — a mood, a word, a song, a season, a texture</label>
+    <textarea id="vibe-input" placeholder="e.g. 'Nirvana and autumn' or 'the feeling of leaving a party early'" rows="3"></textarea>
+    <div class="submit-row">
+      <span class="char-hint">No wrong answers. The stranger the better.</span>
+      <button class="submit" id="submit-btn" onclick="handleSubmit()">Read the Vibe →</button>
+    </div>
+  </div>
+  <div class="loading" id="loading">
+    <div class="film-strip">
+      <div class="frame"></div><div class="frame"></div><div class="frame"></div>
+      <div class="frame"></div><div class="frame"></div>
+    </div>
+    <div class="loading-text" id="loading-text">Decoding your frequency...</div>
+  </div>
+  <div class="error-msg" id="error-msg"></div>
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="vibe-echo" id="vibe-echo"></div>
+      <div class="count-badge">10 films</div>
+    </div>
+    <div class="film-list" id="film-list"></div>
+    <div class="closing-q" id="closing-q">
+      <div class="q-label">To refine the search</div>
+      <div class="q-text" id="q-text"></div>
+    </div>
+  </div>
+</div>
+<script>
+  const seenFilms = new Set()
+  const conversationHistory = []
+  const loadingLines = ["Decoding your frequency...","Consulting the archive...","Finding the emotional DNA...","Scanning 120 years of cinema...","Almost there..."]
+  let loadingInterval
+
+  function cycleLoading() {
+    let i = 0
+    const el = document.getElementById('loading-text')
+    loadingInterval = setInterval(() => { i = (i + 1) % loadingLines.length; el.textContent = loadingLines[i] }, 1800)
+  }
+
+  async function handleSubmit() {
+    const input = document.getElementById('vibe-input').value.trim()
+    if (!input) return
+    const btn = document.getElementById('submit-btn')
+    btn.disabled = true
+    document.getElementById('results').classList.remove('active')
+    document.getElementById('error-msg').classList.remove('active')
+    document.getElementById('loading').classList.add('active')
+    cycleLoading()
+
+    try {
+      const response = await fetch('http://localhost:3000/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vibe: input,
+          history: conversationHistory,
+          seenFilms: [...seenFilms]
+        })
+      })
+      const parsed = await response.json()
+      conversationHistory.push({ role: 'user', content: input })
+      conversationHistory.push({ role: 'assistant', content: JSON.stringify(parsed) })
+      parsed.films.forEach(f => seenFilms.add(`${f.title} (${f.year})`))
+      renderResults(parsed, input)
+    } catch (err) {
+      clearInterval(loadingInterval)
+      document.getElementById('loading').classList.remove('active')
+      const errEl = document.getElementById('error-msg')
+      errEl.textContent = 'The projection broke. Try again — cinema is worth it.'
+      errEl.classList.add('active')
+    } finally {
+      btn.disabled = false
+    }
+  }
+
+  function renderResults(data, originalInput) {
+    clearInterval(loadingInterval)
+    document.getElementById('loading').classList.remove('active')
+    document.getElementById('vibe-echo').innerHTML = `<strong>"${originalInput}"</strong> — ${data.vibeEcho}`
+    const list = document.getElementById('film-list')
+    list.innerHTML = ''
+    data.films.forEach((film, i) => {
+      const card = document.createElement('div')
+      card.className = 'film-card'
+      card.style.animationDelay = `${i * 0.06}s`
+      card.innerHTML = `
+        <div class="film-number">${String(i + 1).padStart(2, '0')}</div>
+        <div class="film-body">
+          <div class="film-title-row">
+            <span class="film-title">${film.title}</span>
+            <span class="film-meta">${film.year}</span>
+          </div>
+          <div class="film-director">dir. ${film.director}</div>
+          <div class="film-desc">${film.what}<span class="vibe-match">${film.why}</span></div>
+        </div>`
+      list.appendChild(card)
+    })
+    document.getElementById('q-text').textContent = data.closingQuestion
+    document.getElementById('results').classList.add('active')
+    document.getElementById('vibe-input').value = ''
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  document.getElementById('vibe-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() }
+  })
+</script>
+</body>
+</html>
