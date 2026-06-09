@@ -1,4 +1,5 @@
 require('dotenv').config()
+console.log('KEY preview:', process.env.ANTHROPIC_API_KEY?.slice(0, 8))
 
 const express = require('express')
 const app = express()
