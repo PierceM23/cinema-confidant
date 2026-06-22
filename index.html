@@ -60,6 +60,44 @@
   .q-text { font-size: 20px; font-style: italic; font-weight: 300; color: var(--cream); line-height: 1.5; }
   .error-msg { display: none; padding: 24px 0; font-family: 'Space Mono', monospace; font-size: 10px; color: #8b1a1a; }
   .error-msg.active { display: block; }
+  .filter-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.filter-toggle:hover { color: var(--gold); }
+.filter-panel {
+  display: none;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border);
+}
+.filter-panel.open { display: block; }
+.year-inputs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.year-input {
+  width: 100px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--cream);
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  padding: 10px 14px;
+  outline: none;
+}
+.year-input:focus { border-color: var(--gold-dim); }
+.year-separator { color: var(--muted); font-family: 'Space Mono', monospace; }
 </style>
 </head>
 <body>
@@ -97,7 +135,28 @@
     </div>
   </div>
 </div>
+<div class="filter-toggle" onclick="toggleFilters()">
+  <span class="filter-label">Refine Search</span>
+  <span class="filter-arrow" id="filter-arrow">↓</span>
+</div>
+
+<div class="filter-panel" id="filter-panel">
+  <div class="filter-group">
+    <label class="input-label">Year Range</label>
+    <div class="year-inputs">
+      <input type="number" id="year-from" placeholder="1920" min="1888" max="2025" class="year-input">
+      <span class="year-separator">—</span>
+      <input type="number" id="year-to" placeholder="2025" min="1888" max="2025" class="year-input">
+    </div>
+  </div>
+</div>
 <script>
+  function toggleFilters() {
+  const panel = document.getElementById('filter-panel')
+  const arrow = document.getElementById('filter-arrow')
+  panel.classList.toggle('open')
+  arrow.textContent = panel.classList.contains('open') ? '↑' : '↓'
+}
   const seenFilms = new Set()
   const conversationHistory = []
   const loadingLines = ["Decoding your frequency...","Consulting the archive...","Finding the emotional DNA...","Scanning 120 years of cinema...","Almost there..."]
@@ -111,6 +170,8 @@
 
   async function handleSubmit() {
     const input = document.getElementById('vibe-input').value.trim()
+    const yearFrom = document.getElementById('year-from').value
+const yearTo = document.getElementById('year-to').value
     if (!input) return
     const btn = document.getElementById('submit-btn')
     btn.disabled = true
@@ -126,7 +187,9 @@
         body: JSON.stringify({
           vibe: input,
           history: conversationHistory,
-          seenFilms: [...seenFilms]
+          seenFilms: [...seenFilms],
+          yearFrom: yearFrom,
+          yearTo: yearTo
         })
       })
       const parsed = await response.json()

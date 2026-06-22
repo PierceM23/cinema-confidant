@@ -1,4 +1,4 @@
-require('dotenv').config()
+if (process.env.NODE_ENV !== 'production') require('dotenv').config()
 console.log('KEY preview:', process.env.ANTHROPIC_API_KEY?.slice(0, 8))
 
 const express = require('express')
@@ -10,7 +10,7 @@ app.use(express.static('.'))
 app.use(express.json())
 
 app.post('/recommend', async (req, res) => {
-  const { vibe, history, seenFilms } = req.body
+ const { vibe, history, seenFilms, yearFrom, yearTo } = req.body
 
   const seenList = seenFilms && seenFilms.length > 0
     ? `Films already recommended (never repeat): ${seenFilms.join(', ')}`
@@ -26,6 +26,7 @@ Rules:
 - End with one question to refine the next search
 - The user should finish reading and think "I never would have found this myself"
 
+${yearFrom || yearTo ? `Year constraint: Only recommend films released between ${yearFrom || '1888'} and ${yearTo || '2025'}.` : ''}
 Respond ONLY with valid JSON, no markdown fences, no preamble:
 {
   "vibeEcho": "6-10 word poetic echo of what you decoded",
@@ -68,7 +69,7 @@ Respond ONLY with valid JSON, no markdown fences, no preamble:
   }
 })
 
-app.listen(3000, () => {
+app.listen(process.env.PORT || 3000, () => {
   console.log('Server running on port 3000')
 })
 
